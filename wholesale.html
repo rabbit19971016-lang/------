@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批發報價計算機</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink:   #FF6B9D;
+    --peach:  #FFB347;
+    --mint:   #4ECDC4;
+    --lavender: #A78BFA;
+    --cream:  #FFF8F0;
+    --card-bg: #FFFFFF;
+    --text:   #2D2D2D;
+    --muted:  #9CA3AF;
+    --tier1:  #60A5FA;
+    --tier2:  #34D399;
+    --tier3:  #FBBF24;
+    --tier4:  #F87171;
+    --shadow: 0 8px 32px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Decorative blobs */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::before {
+    width: 500px; height: 500px;
+    background: var(--pink);
+    top: -150px; right: -100px;
+  }
+  body::after {
+    width: 400px; height: 400px;
+    background: var(--mint);
+    bottom: -100px; left: -80px;
+  }
+
+  .container {
+    max-width: 620px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+    animation: fadeDown 0.6s ease both;
+  }
+  .logo-emoji { font-size: 52px; display: block; margin-bottom: 8px; }
+  header h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 28px; font-weight: 900;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  header h1 span { color: var(--pink); }
+  header p {
+    margin-top: 6px; font-size: 13.5px;
+    color: var(--muted); font-weight: 500;
+  }
+
+  /* Input card */
+  .input-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 28px 28px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+    border: 2px solid rgba(255,107,157,0.12);
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+
+  .input-card label {
+    display: block;
+    font-size: 13px; font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .input-wrap {
+    flex: 1; min-width: 140px;
+  }
+  .input-wrap label { margin-bottom: 8px; }
+
+  .input-field {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 22px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text);
+    border: 2.5px solid #F0E8FF;
+    border-radius: 14px;
+    outline: none;
+    background: #FAFAFE;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -moz-appearance: textfield;
+  }
+  .input-field::-webkit-outer-spin-button,
+  .input-field::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .input-field:focus {
+    border-color: var(--lavender);
+    box-shadow: 0 0 0 4px rgba(167,139,250,0.15);
+    background: #fff;
+  }
+  .currency-tag {
+    font-size: 13px; font-weight: 700;
+    color: var(--muted);
+    margin-top: 6px;
+    padding-left: 4px;
+  }
+
+  .arrow-icon {
+    font-size: 26px;
+    color: var(--pink);
+    flex-shrink: 0;
+    margin-top: 22px;
+  }
+
+  /* Exchange rate row */
+  .rate-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1.5px dashed #F0E8FF;
+    flex-wrap: wrap;
+  }
+  .rate-row label {
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+  .rate-input {
+    width: 90px;
+    padding: 8px 12px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    color: var(--lavender);
+    border: 2px solid #EDE9FE;
+    border-radius: 10px;
+    outline: none;
+    background: #FAF8FF;
+    -moz-appearance: textfield;
+  }
+  .rate-input::-webkit-outer-spin-button,
+  .rate-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .rate-input:focus {
+    border-color: var(--lavender);
+    box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+  }
+  .rate-note {
+    font-size: 12px;
+    color: var(--muted);
+    flex: 1;
+  }
+
+  /* Result summary */
+  .result-summary {
+    background: linear-gradient(135deg, #FF6B9D22 0%, #A78BFA22 100%);
+    border: 2px solid rgba(255,107,157,0.2);
+    border-radius: 18px;
+    padding: 18px 22px;
+    margin-top: 20px;
+    display: none;
+    animation: pop 0.3s ease both;
+  }
+  .result-summary.show { display: block; }
+  .summary-title {
+    font-size: 11.5px; font-weight: 700;
+    color: var(--pink);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .summary-item { text-align: center; }
+  .summary-item .val {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text);
+    display: block;
+  }
+  .summary-item .lbl {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .summary-item.highlight .val { color: var(--pink); }
+
+  /* Plans section */
+  .plans-title {
+    font-size: 13px; font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 28px 0 14px 4px;
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+
+  .plan-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 20px 22px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    border-left: 5px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.5s ease both;
+    cursor: default;
+  }
+  .plan-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+  }
+  .plan-card:nth-child(1) { border-color: var(--tier1); animation-delay: 0.15s; }
+  .plan-card:nth-child(2) { border-color: var(--tier2); animation-delay: 0.22s; }
+  .plan-card:nth-child(3) { border-color: var(--tier3); animation-delay: 0.29s; }
+  .plan-card:nth-child(4) { border-color: var(--tier4); animation-delay: 0.36s; }
+
+  .plan-badge {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .plan-card:nth-child(1) .plan-badge { background: #EFF6FF; }
+  .plan-card:nth-child(2) .plan-badge { background: #ECFDF5; }
+  .plan-card:nth-child(3) .plan-badge { background: #FFFBEB; }
+  .plan-card:nth-child(4) .plan-badge { background: #FEF2F2; }
+
+  .plan-info { flex: 1; }
+  .plan-name {
+    font-size: 15px; font-weight: 800;
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+  }
+  .plan-range {
+    font-size: 12px; color: var(--muted);
+    font-weight: 600; margin-top: 2px;
+  }
+  .plan-discount-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 5px;
+  }
+  .plan-card:nth-child(1) .plan-discount-tag { background: #DBEAFE; color: #1D4ED8; }
+  .plan-card:nth-child(2) .plan-discount-tag { background: #D1FAE5; color: #065F46; }
+  .plan-card:nth-child(3) .plan-discount-tag { background: #FEF3C7; color: #92400E; }
+  .plan-card:nth-child(4) .plan-discount-tag { background: #FEE2E2; color: #991B1B; }
+
+  .plan-price-block { text-align: right; flex-shrink: 0; }
+  .plan-price-unit {
+    font-size: 11px; color: var(--muted);
+    font-weight: 600; margin-bottom: 2px;
+  }
+  .plan-price {
+    font-family: 'Nunito', sans-serif;
+    font-size: 28px; font-weight: 900;
+    color: var(--text);
+    line-height: 1;
+  }
+  .plan-price.empty { color: #DDD; font-size: 20px; }
+  .plan-price-total {
+    font-size: 11.5px; color: var(--muted);
+    font-weight: 600; margin-top: 3px;
+  }
+  .plan-price-total span {
+    font-weight: 800;
+    color: var(--text);
+  }
+  .plan-card:nth-child(1) .plan-price { color: var(--tier1); }
+  .plan-card:nth-child(2) .plan-price { color: var(--tier2); }
+  .plan-card:nth-child(3) .plan-price { color: var(--tier3); }
+  .plan-card:nth-child(4) .plan-price { color: var(--tier4); }
+
+  /* Footer note */
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 32px;
+    line-height: 1.8;
+    animation: fadeUp 0.5s ease 0.5s both;
+  }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes numFlip {
+    0%   { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .num-animate { animation: numFlip 0.25s ease both; }
+
+  @media (max-width: 480px) {
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .plan-price { font-size: 22px; }
+    .input-field { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="logo-emoji">🧸</span>
+    <h1>批發<span>報價</span>計算機</h1>
+    <p>輸入韓國成本，自動換算台幣 ＋ 運費，列出四種方案報價</p>
+  </header>
+
+  <div class="input-card">
+    <div class="input-row">
+      <div class="input-wrap">
+        <label>韓國成本</label>
+        <input class="input-field" type="number" id="krwCost" placeholder="0" min="0" step="1">
+        <div class="currency-tag">₩ 韓元</div>
+      </div>
+      <div class="arrow-icon">→</div>
+      <div class="input-wrap">
+        <label>台幣成本</label>
+        <input class="input-field" type="number" id="twdResult" placeholder="—" readonly
+               style="background:#FFF8F0; border-color:#FFE4C4; color:var(--peach); cursor:default;">
+        <div class="currency-tag">NT$ 台幣</div>
+      </div>
+    </div>
+
+    <div class="rate-row">
+      <label>匯率</label>
+      <input class="rate-input" type="number" id="exchangeRate" value="0.023" step="0.001" min="0.001">
+      <span class="rate-note">₩1 ≈ NT$<span id="rateDisplay">0.023</span></span>
+    </div>
+
+    <div class="result-summary" id="summary">
+      <div class="summary-title">💰 成本明細</div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="val" id="s_krw">—</span>
+          <div class="lbl">韓元成本</div>
+        </div>
+        <div class="summary-item">
+          <span class="val" id="s_base">—</span>
+          <div class="lbl">換算台幣</div>
+        </div>
+        <div class="summary-item highlight">
+          <span class="val" id="s_total">—</span>
+          <div class="lbl">台幣成本</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="plans-title">📦 四種批發方案（每款最少5隻）</div>
+
+  <div id="planCards">
+    <!-- 基礎方案 -->
+    <div class="plan-card" id="card0">
+      <div class="plan-badge">🔵</div>
+      <div class="plan-info">
+        <div class="plan-name">基礎方案</div>
+        <div class="plan-range">10 – 29 隻</div>
+        <div class="plan-discount-tag">無折扣（售價×1）</div>
+      </div>
+      <div class="plan-price-block">
+        <div class="plan-price-unit">折後單價</div>
+        <div class="plan-price empty" id="p0">—</div>
+        <div class="plan-price-total">10隻合計 NT$ <span id="t0">—</span></div>
+      </div>
+    </div>
+    <!-- 銀牌方案 -->
+    <div class="plan-card" id="card1">
+      <div class="plan-badge">🟢</div>
+      <div class="plan-info">
+        <div class="plan-name">銀牌方案</div>
+        <div class="plan-range">30 – 59 隻</div>
+        <div class="plan-discount-tag">95折</div>
+      </div>
+      <div class="plan-price-block">
+        <div class="plan-price-unit">折後單價</div>
+        <div class="plan-price empty" id="p1">—</div>
+        <div class="plan-price-total">30隻合計 NT$ <span id="t1">—</span></div>
+      </div>
+    </div>
+    <!-- 金牌方案 -->
+    <div class="plan-card" id="card2">
+      <div class="plan-badge">🟡</div>
+      <div class="plan-info">
+        <div class="plan-name">金牌方案</div>
+        <div class="plan-range">60 – 99 隻</div>
+        <div class="plan-discount-tag">9折</div>
+      </div>
+      <div class="plan-price-block">
+        <div class="plan-price-unit">折後單價</div>
+        <div class="plan-price empty" id="p2">—</div>
+        <div class="plan-price-total">60隻合計 NT$ <span id="t2">—</span></div>
+      </div>
+    </div>
+    <!-- 白金方案 -->
+    <div class="plan-card" id="card3">
+      <div class="plan-badge">🔴</div>
+      <div class="plan-info">
+        <div class="plan-name">白金方案</div>
+        <div class="plan-range">100 隻以上</div>
+        <div class="plan-discount-tag">85折</div>
+      </div>
+      <div class="plan-price-block">
+        <div class="plan-price-unit">折後單價</div>
+        <div class="plan-price empty" id="p3">—</div>
+        <div class="plan-price-total">100隻合計 NT$ <span id="t3">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    售價 ＝ 台幣成本 × 1.5，四捨五入至整數<br>
+    折後單價依各方案折扣計算：銀牌95折 ✦ 金牌9折 ✦ 白金85折<br>每款至少 5 隻起訂
+  </div>
+
+</div>
+
+<script>
+  const discounts = [1.0, 0.95, 0.9, 0.85];
+  const minQty   = [10,  30,  60,  100];
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString('zh-TW');
+  }
+
+  function calc() {
+    const krw  = parseFloat(document.getElementById('krwCost').value) || 0;
+    const rate = parseFloat(document.getElementById('exchangeRate').value) || 0.023;
+    document.getElementById('rateDisplay').textContent = rate;
+
+    if (krw <= 0) {
+      document.getElementById('twdResult').value = '';
+      document.getElementById('summary').classList.remove('show');
+      for (let i = 0; i < 4; i++) {
+        document.getElementById('p' + i).textContent = '—';
+        document.getElementById('p' + i).classList.add('empty');
+        document.getElementById('t' + i).textContent = '—';
+      }
+      return;
+    }
+
+    const base  = krw * rate;
+    const total = base;              // 台幣成本
+    const sell  = Math.round(total * 1.5); // 售價
+
+    document.getElementById('twdResult').value = Math.round(total);
+    document.getElementById('s_krw').textContent  = '₩' + fmt(krw);
+    document.getElementById('s_base').textContent = 'NT$' + fmt(base);
+    document.getElementById('s_total').textContent= 'NT$' + fmt(total);
+    document.getElementById('summary').classList.add('show');
+
+    for (let i = 0; i < 4; i++) {
+      const price = Math.round(sell * discounts[i]);
+      const el = document.getElementById('p' + i);
+      el.classList.remove('empty');
+      el.classList.remove('num-animate');
+      void el.offsetWidth; // reflow
+      el.classList.add('num-animate');
+      el.textContent = 'NT$' + fmt(price);
+      document.getElementById('t' + i).textContent = fmt(price * minQty[i]);
+    }
+  }
+
+  document.getElementById('krwCost').addEventListener('input', calc);
+  document.getElementById('exchangeRate').addEventListener('input', calc);
+</script>
+</body>
+</html>
