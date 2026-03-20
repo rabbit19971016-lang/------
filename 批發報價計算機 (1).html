@@ -371,7 +371,7 @@
       </div>
       <div class="arrow-icon">→</div>
       <div class="input-wrap">
-        <label>台幣成本（含運）</label>
+        <label>台幣成本</label>
         <input class="input-field" type="number" id="twdResult" placeholder="—" readonly
                style="background:#FFF8F0; border-color:#FFE4C4; color:var(--peach); cursor:default;">
         <div class="currency-tag">NT$ 台幣</div>
@@ -381,7 +381,7 @@
     <div class="rate-row">
       <label>匯率</label>
       <input class="rate-input" type="number" id="exchangeRate" value="0.023" step="0.001" min="0.001">
-      <span class="rate-note">₩1 ≈ NT$<span id="rateDisplay">0.023</span>　＋　運費 NT$5／隻</span>
+      <span class="rate-note">₩1 ≈ NT$<span id="rateDisplay">0.023</span></span>
     </div>
 
     <div class="result-summary" id="summary">
@@ -397,7 +397,7 @@
         </div>
         <div class="summary-item highlight">
           <span class="val" id="s_total">—</span>
-          <div class="lbl">台幣成本＋運費</div>
+          <div class="lbl">台幣成本</div>
         </div>
       </div>
     </div>
@@ -465,7 +465,7 @@
   </div>
 
   <div class="footer-note">
-    售價 ＝ 台幣成本（含運）× 1.5，四捨五入至整數<br>
+    售價 ＝ 台幣成本 × 1.5，四捨五入至整數<br>
     折後單價依各方案折扣計算：銀牌95折 ✦ 金牌9折 ✦ 白金85折<br>每款至少 5 隻起訂
   </div>
 
@@ -496,7 +496,7 @@
     }
 
     const base  = krw * rate;
-    const total = base + 5;          // 台幣成本含運
+    const total = base;              // 台幣成本
     const sell  = Math.round(total * 1.5); // 售價
 
     document.getElementById('twdResult').value = Math.round(total);
